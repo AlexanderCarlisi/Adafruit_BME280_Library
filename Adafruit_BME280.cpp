@@ -83,18 +83,19 @@ Adafruit_BME280::~Adafruit_BME280(void) {
  *   @param theWire the I2C object to use, defaults to &Wire
  *   @returns true on success, false otherwise
  */
-bool Adafruit_BME280::begin(uint8_t addr, TwoWire *theWire) {
+int Adafruit_BME280::begin(uint8_t addr, TwoWire *theWire) {
   if (spi_dev == NULL) {
     // I2C mode
     if (i2c_dev)
       delete i2c_dev;
     i2c_dev = new Adafruit_I2CDevice(addr, theWire);
     if (!i2c_dev->begin())
-      return false;
+      return BME280_BEGIN_I2C_NOT_DETECTED;
   } else {
     // SPI mode
+    // This will never be false :)
     if (!spi_dev->begin())
-      return false;
+      return BME280_BEGIN_SPI;
   }
   return init();
 }
@@ -103,11 +104,11 @@ bool Adafruit_BME280::begin(uint8_t addr, TwoWire *theWire) {
  *   @brief  Initialise sensor with given parameters / settings
  *   @returns true on success, false otherwise
  */
-bool Adafruit_BME280::init() {
+int Adafruit_BME280::init() {
   // check if sensor, i.e. the chip ID is correct
   _sensorID = read8(BME280_REGISTER_CHIPID);
   if (_sensorID != 0x60)
-    return false;
+    return BME280_INIT_INCORRECT_CHIP_ID;
 
   // reset the device using soft-reset
   // this makes sure the IIR is off, etc.
@@ -126,7 +127,7 @@ bool Adafruit_BME280::init() {
 
   delay(100);
 
-  return true;
+  return BME280_BEGIN_ALL_GOOD;
 }
 
 /*!
